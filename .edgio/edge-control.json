@@ -1,0 +1,171 @@
+{
+  "name": "inquirer",
+  "origins": [
+    {
+      "name": "origin",
+      "override_host_header": "www.inquirer.net",
+      "hosts": [
+        {
+          "location": "www.inquirer.net"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "if": [
+        {
+          "==": [
+            {
+              "request": "path"
+            },
+            "/"
+          ]
+        },
+        {
+          "origin": {
+            "set_origin": "edgio_serverless"
+          },
+          "headers": {
+            "set_request_headers": {
+              "+x-edg-serverless-hint": "compute-exclusive:0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "and": [
+            {
+              "==": [
+                {
+                  "request": "path"
+                },
+                "/__edgio__/devtools/enable"
+              ]
+            },
+            {
+              "===": [
+                {
+                  "request": "method"
+                },
+                "GET"
+              ]
+            }
+          ]
+        },
+        {
+          "headers": {
+            "add_response_headers": {
+              "set-cookie": "edgio_devtools_enabled=true; Path=/"
+            }
+          },
+          "caching": {
+            "bypass_cache": true,
+            "bypass_client_cache": true
+          },
+          "url": {
+            "url_redirect": {
+              "code": 302,
+              "source": "/__edgio__/devtools/enable:optionalSlash(\\/?)?:optionalQuery(\\?.*)?",
+              "syntax": "path-to-regexp",
+              "destination": "/"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "and": [
+            {
+              "==": [
+                {
+                  "request": "path"
+                },
+                "/__edgio__/devtools/disable"
+              ]
+            },
+            {
+              "===": [
+                {
+                  "request": "method"
+                },
+                "GET"
+              ]
+            }
+          ]
+        },
+        {
+          "headers": {
+            "add_response_headers": {
+              "set-cookie": "edgio_devtools_enabled=false; Path=/"
+            }
+          },
+          "caching": {
+            "bypass_cache": true,
+            "bypass_client_cache": true
+          },
+          "url": {
+            "url_redirect": {
+              "code": 302,
+              "source": "/__edgio__/devtools/disable:optionalSlash(\\/?)?:optionalQuery(\\?.*)?",
+              "syntax": "path-to-regexp",
+              "destination": "/"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "==": [
+            {
+              "request": "path"
+            },
+            "/__edgio__/devtools/:path*"
+          ]
+        },
+        {
+          "caching": {
+            "max_age": "30758400s",
+            "bypass_client_cache": true
+          },
+          "origin": {
+            "set_origin": "edgio_static"
+          },
+          "url": {
+            "url_rewrite": [
+              {
+                "source": "/__edgio__/devtools/:path*:optionalSlash(\\/?)?:optionalQuery(\\?.*)?",
+                "syntax": "path-to-regexp",
+                "destination": "/node_modules/@edgio/devtools/widget/:path*"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "==": [
+            {
+              "request": "path"
+            },
+            "/:path*"
+          ]
+        },
+        {
+          "headers": {
+            "debug_header": true
+          }
+        }
+      ]
+    }
+  ]
+}
